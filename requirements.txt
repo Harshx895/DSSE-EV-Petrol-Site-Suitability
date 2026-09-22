@@ -1,0 +1,49 @@
+# ── DSSE Backend Requirements ────────────────────────────────────────────────
+# Python 3.12+  |  Install: pip install -r requirements.txt
+
+# API Framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-dotenv==1.0.1
+pydantic==2.8.2
+
+# Spatial Processing
+geopandas==0.14.4
+shapely==2.0.5
+pyproj==3.6.1
+fiona==1.10.0
+h3==3.7.7
+
+# Spatial Indexing & Numerics
+scipy==1.14.0
+numpy==1.26.4
+pandas==2.2.2
+pyarrow>=15.0,<18.0        # Parquet read/write (compatible with mlflow 2.15)
+
+# Machine Learning
+scikit-learn==1.5.1
+xgboost==2.1.1
+shap==0.45.1
+mapie==0.8.6             # Conformal prediction (UQ score intervals)
+imbalanced-learn==0.12.3 # For PU-Bagging bootstrap
+
+# Dimensionality Analysis (UMAP for paper figures)
+umap-learn==0.5.6
+matplotlib==3.9.2
+seaborn==0.13.2
+
+# Experiment Tracking
+mlflow==2.15.1
+
+# HTTP / API Clients
+requests==2.32.3
+httpx==0.27.2
+tenacity==8.5.0          # Retry logic for API calls
+
+# OSM / Geospatial Data Ingestion
+osmnx==1.9.3
+overpy==0.7             # Overpass API wrapper
+
+# Data utilities
+tqdm==4.66.5
+joblib==1.4.2
