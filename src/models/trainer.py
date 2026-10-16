@@ -54,6 +54,12 @@ InfraType = Literal["petrol", "ev"]
 # Elkan-Noto PU Calibration
 # ──────────────────────────────────────────────────────────────────────────────
 
+# Feature indices for competitor counts (per FEATURE_NAMES order)
+_FEAT_COMPETITOR_PETROL = 11
+_FEAT_COMPETITOR_EV     = 12
+_RADIUS_1KM_DEG         = 1000 / 111_320.0  # ~0.008983°
+
+
 class PUClassifier:
     """
     XGBoost classifier with Elkan-Noto PU calibration.
@@ -61,18 +67,22 @@ class PUClassifier:
     Training:  P (label=1) vs U (label=0, unlabeled)
     Inference: s(x) / c  where c = P(s=1 | y=1) estimated on hold-out P set.
 
+    scale_pos_weight is set dynamically to len(X_u)/len(X_p) to correctly
+    compensate for class imbalance — previously hardcoded to 3.0 which
+    severely under-weighted sparse EV positives.
+
     References:
       Elkan & Noto (2008) "Learning Classifiers from Only Positive and Unlabeled Data"
     """
 
     def __init__(self, random_state: int = 42):
+        # scale_pos_weight set dynamically in fit()
         self.clf = xgb.XGBClassifier(
             n_estimators=400,
             max_depth=5,
             learning_rate=0.05,
             subsample=0.8,
             colsample_bytree=0.8,
-            scale_pos_weight=3.0,   # up-weight the sparse positive class
             use_label_encoder=False,
             eval_metric="logloss",
             random_state=random_state,
@@ -80,12 +90,17 @@ class PUClassifier:
         )
         self.c_: float | None = None
         self.scaler_ = StandardScaler()
+        self._random_state = random_state
 
     def fit(self, X_p: np.ndarray, X_u: np.ndarray) -> "PUClassifier":
         """
         X_p: feature matrix for POSITIVE set (label=1)
         X_u: feature matrix for UNLABELED/BACKGROUND set (label=0)
         """
+        # Dynamic scale_pos_weight: ratio of background to positives
+        spw = max(1.0, len(X_u) / max(len(X_p), 1))
+        self.clf.set_params(scale_pos_weight=round(spw, 2))
+
         X = np.vstack([X_p, X_u])
         y = np.concatenate([np.ones(len(X_p)), np.zeros(len(X_u))])
 
@@ -166,13 +181,45 @@ class ConformalRegressor:
 # Training orchestrator
 # ──────────────────────────────────────────────────────────────────────────────
 
+def _fix_competitor_leakage(
+    X_test: np.ndarray,
+    test_coords: np.ndarray,
+    feat_idx: int,
+) -> np.ndarray:
+    """
+    Correct competitor count features in the test set by subtracting
+    test-fold self-contamination.
+
+    During CV, competitor counts were computed from ALL stations (including
+    those in the test fold). For honest evaluation, each test station's
+    competitor count should only reflect training-fold stations.
+    Correction: subtract how many OTHER test-fold stations lie within 1km.
+    """
+    X = X_test.copy()
+    if len(test_coords) < 2:
+        return X
+    from scipy.spatial import cKDTree as _KDT
+    tree = _KDT(test_coords)
+    for i, coord in enumerate(test_coords):
+        nearby = tree.query_ball_point(coord, r=_RADIUS_1KM_DEG)
+        correction = len(nearby) - 1   # -1 to exclude self
+        X[i, feat_idx] = max(0.0, float(X[i, feat_idx]) - correction)
+    return X
+
+
 def _spatial_block_cv_pu(
     X_p: np.ndarray,
     X_u: np.ndarray,
     coords_p: np.ndarray,
     k: int = 5,
+    competitor_feat_idx: int = _FEAT_COMPETITOR_PETROL,
 ) -> dict:
-    """Run Spatial Block CV on PU classifier. Returns fold metrics."""
+    """
+    Run Spatial Block CV on PU classifier with competitor leakage correction.
+
+    competitor_feat_idx: which feature column holds the primary competitor count
+      for the positive class being evaluated (11=petrol, 12=EV).
+    """
     cv = SpatialBlockCV(k=k)
     aucs, loglosses = [], []
 
@@ -180,7 +227,13 @@ def _spatial_block_cv_pu(
         if len(test_idx) == 0:
             continue
         X_p_train = X_p[train_idx]
-        X_p_test  = X_p[test_idx]
+        X_p_test  = X_p[test_idx].copy()
+
+        # ── Competitor leakage correction ─────────────────────────────────────
+        # Subtract test-fold stations from the competitor count of each test point
+        X_p_test = _fix_competitor_leakage(
+            X_p_test, coords_p[test_idx], feat_idx=competitor_feat_idx
+        )
 
         clf = PUClassifier()
         clf.fit(X_p_train, X_u)
@@ -268,18 +321,21 @@ def train_city(
 
     # ── 1. PU Classifier — Petrol ─────────────────────────────────────────────
     print(f"  [Petrol PU]  Positives={len(X_petrol)}, Background={len(X_bg)}")
-    cv_pu_p = _spatial_block_cv_pu(X_petrol, X_bg, coords_petrol)
+    cv_pu_p = _spatial_block_cv_pu(X_petrol, X_bg, coords_petrol,
+                                    competitor_feat_idx=_FEAT_COMPETITOR_PETROL)
     report["petrol_pu_cv"] = cv_pu_p
 
     pu_petrol = PUClassifier()
     pu_petrol.fit(X_petrol, X_bg)
     with open(out_dir / f"{city}_pu_petrol.pkl", "wb") as f:
         pickle.dump(pu_petrol, f)
-    print(f"    CV AUC: {cv_pu_p['auc_mean']:.3f} ± {cv_pu_p['auc_std']:.3f}")
+    print(f"    CV AUC: {cv_pu_p['auc_mean']:.3f} ± {cv_pu_p['auc_std']:.3f}  "
+          f"(spw={pu_petrol.clf.get_params()['scale_pos_weight']})")
 
     # ── 2. PU Classifier — EV ────────────────────────────────────────────────
     print(f"  [EV PU]      Positives={len(X_ev)}, Background={len(X_bg)}")
-    cv_pu_e = _spatial_block_cv_pu(X_ev, X_bg, coords_ev)
+    cv_pu_e = _spatial_block_cv_pu(X_ev, X_bg, coords_ev,
+                                    competitor_feat_idx=_FEAT_COMPETITOR_EV)
     report["ev_pu_cv"] = cv_pu_e
 
     pu_ev = PUClassifier()

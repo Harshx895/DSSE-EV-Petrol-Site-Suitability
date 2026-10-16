@@ -200,7 +200,7 @@ def print_sfds(city: str):
     print(f"{BOLD}{M}{'─'*62}{RST}")
     print(f"{BOLD}{M}  Research Finding: Spatial Feature Divergence Score (SFDS){RST}")
     print(f"{BOLD}{M}{'─'*62}{RST}")
-    print(f"\n  {BOLD}SFDS = {s['sfds']:.4f}{RST}  [95% CI: {s['ci_low']:.4f}–{s['ci_high']:.4f}]")
+    print(f"\n  {BOLD}SFDS = {s['sfds']:.4f}{RST}  [95% sensitivity range: {s['ci_low']:.4f}–{s['ci_high']:.4f}]")
     print(f"  {s['interpretation']}\n")
     print(f"  {DIM}Interpretation: EV stations occupy a measurably different{RST}")
     print(f"  {DIM}spatial environment from petrol stations in Pune.{RST}")

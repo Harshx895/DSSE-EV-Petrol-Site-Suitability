@@ -18,10 +18,10 @@ import shap
 
 from src.models.feature_extractor import FeatureExtractor, FEATURE_NAMES
 from src.models.recommender import decide_quadrant, score_to_100
+from src.spatial.constraints_filter import passes_hard_constraints
 
-# Hard constraint thresholds (per CONTEXT §5)
-MAX_ROAD_DIST_M    = 150.0   # must be within 150m of motorized road
-MAX_POWER_DIST_WARN = 2500.0  # power grid >2500m triggers EV warning
+# Water body proximity hard exclusion threshold (~100m)
+_WATER_EXCL_DEG = 100 / 111_320.0
 
 
 class Predictor:
@@ -73,18 +73,18 @@ class Predictor:
         X       = np.array([list(feats.values())], dtype=np.float32)
         warnings: list[str] = []
 
-        # ── Hard constraints ──────────────────────────────────────────────────
-        road_dist = min(feats["dist_primary_highway_m"],
-                        feats["dist_secondary_road_m"])
-        if road_dist > MAX_ROAD_DIST_M:
-            warnings.append(f"Location is {road_dist:.0f}m from nearest road (>150m setback rule)")
+        # ── Hard constraints (via constraints_filter) ─────────────────────────
+        passes, constraint_warnings = passes_hard_constraints(feats, infra_type="both")
+        warnings.extend(constraint_warnings)
 
-        water_in_range = False  # exclusion mask — checked in constraints_filter.py
-        if feats["power_grid_dist_m"] > MAX_POWER_DIST_WARN:
-            warnings.append(
-                f"High Transformer Substation Interconnection Capex "
-                f"(power grid {feats['power_grid_dist_m']:.0f}m away)"
-            )
+        # Water body exclusion — query water KDTree directly
+        if self.extractor.trees.get("water") is not None:
+            dist_water, _ = self.extractor.trees["water"].query([[lat, lon]])
+            if dist_water[0] <= _WATER_EXCL_DEG:
+                warnings.append(
+                    f"Location is within ~{dist_water[0]*111320:.0f}m of a water body — "
+                    f"likely unsuitable for surface infrastructure"
+                )
 
         # ── Viability (PU classifier) ────────────────────────────────────────
         vp = float(self.pu_petrol.predict_proba(X)[0]) if self.pu_petrol else 0.5

@@ -76,7 +76,7 @@ def compute_sfds(
         "sfds":       sfds_point,
         "ci_low":     ci_low,
         "ci_high":    ci_high,
-        "report_str": f"SFDS = {sfds_point:.4f} [95% CI: {ci_low:.4f}–{ci_high:.4f}]",
+        "report_str": f"SFDS = {sfds_point:.4f} [95% sensitivity range: {ci_low:.4f}–{ci_high:.4f}]",
         "interpretation": interp,
         "weights_petrol": p.tolist(),
         "weights_ev":     q.tolist(),

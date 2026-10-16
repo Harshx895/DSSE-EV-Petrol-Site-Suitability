@@ -148,7 +148,9 @@ class FeatureExtractor:
         f13 = _count_within(self.tree_ev,     pt, r1km) if self.tree_ev     else 0
 
         # ── Composite features ────────────────────────────────────────────────
-        # dwell_index: (cafe*2) + restaurant + retail + (parking*1.5)
+        # dwell_index: (cafe×2) + restaurant + retail + (parking×1.5)
+        # Note: cafes weighted 2× for longer dwell time; parking 1.5× as proxy
+        # for vehicle accumulation. No log transform applied (linear is intentional).
         f14 = (f3 * 2) + f4 + f5 + (f16 * 1.5)
 
         # transit_accessibility: bus_stops_500m + (1000 / (metro_dist + 100))

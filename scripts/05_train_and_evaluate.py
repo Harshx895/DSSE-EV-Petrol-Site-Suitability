@@ -224,7 +224,7 @@ def main(city: str) -> None:
     print(f"\n{'='*60}")
     print(f"  Phase 2 complete for {city.upper()}!")
     print(f"  SFDS = {sfds_result['sfds']:.4f} "
-          f"[95% CI: {sfds_result['ci_low']:.4f}–{sfds_result['ci_high']:.4f}]")
+          f"[95% sensitivity range: {sfds_result['ci_low']:.4f}–{sfds_result['ci_high']:.4f}]")
     print(f"\n  Models saved to: models/{city}/")
     print(f"  Figures  saved to: figures/")
     print(f"\n  Next: python -X utf8 scripts/06_cache_heatmap.py --city {city}")
