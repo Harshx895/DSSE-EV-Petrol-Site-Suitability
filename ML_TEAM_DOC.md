@@ -4,7 +4,7 @@
 **Project:** EDI-5 — Dynamic Site Suitability Engine (DSSE)  
 **Your Role:** Model Design, Training, Validation, Inference, Research Metric (SFDS)  
 **Scripts You Own:** 05, 06, 07, 08  
-**Output You Produced:** PU AUC 0.912 (EV) | SFDS = 0.4069 | 896-hexagon heatmap | Terminal demo
+**Output You Produced:** PU AUC 0.646 (EV) | SFDS = 0.3348 | 896-hexagon heatmap | Terminal demo
 
 ---
 
@@ -153,7 +153,7 @@ Model 1: PU Petrol Classifier
   Output: P(location is a viable petrol site) → 0.0 to 1.0
 
 Model 2: PU EV Classifier
-  Positives: 13 commercial EV chargers
+  Positives: 328 commercial EV chargers
   Unlabelled: ~13000 background points (1000×)
   Output: P(location is a viable EV site) → 0.0 to 1.0
 ```
@@ -380,7 +380,7 @@ SFDS = 0.5: Substantial but not complete divergence.
 ### 8.4 Our Result
 
 ```
-SFDS = 0.4069
+SFDS = 0.3348
 95% Confidence Interval: [0.3480 – 0.6453]
 Bootstrap iterations: 1000
 ```
@@ -454,7 +454,7 @@ def decide_quadrant(petrol_score: float, ev_score: float,
 | Metric | Petrol | EV |
 |---|---|---|
 | AUC (Spatial Block CV, 5-fold) | 0.779 ± 0.036 | 0.912 ± 0.127 |
-| SFDS | 0.4069 | 95% CI [0.3480–0.6453] |
+| SFDS | 0.3348 | 95% CI [0.3480–0.6453] |
 | Regressor R² | -0.155 ± 0.144 | -0.289 ± 0.164 |
 
 ### 10.2 Known Station Validation (Holdout)
@@ -463,7 +463,7 @@ We scored actual station coordinates (not used in training blocks):
 
 | Location Type | Mean Score (correct type) | Quadrant |
 |---|---|---|
-| 13 commercial EV chargers | 74.2 EV score | BOTH_VIABLE / BEST_EV |
+| 328 commercial EV chargers | 74.2 EV score | BOTH_VIABLE / BEST_EV |
 | 363 petrol stations | 71.9 Petrol score | BEST_PETROL |
 
 **Interpretation:** The model assigns high scores to real stations when scored at their exact coordinates. This confirms the model has learned meaningful spatial patterns.
@@ -628,7 +628,7 @@ python -X utf8 scripts/08_visualize_heatmap.py --city pune
 | `models/pune/kdtrees.pkl` | 897 KB | 13 spatial KDTree layers (from data team) |
 | `models/pune/shap_importances.json` | 4 KB | Global SHAP weights, both models |
 | `models/pune/train_report.json` | 2 KB | CV metrics, SFDS, fold-wise AUC |
-| `data/processed/pune/sfds_results_pune.json` | 1 KB | SFDS = 0.4069, CI, interpretation |
+| `data/processed/pune/sfds_results_pune.json` | 1 KB | SFDS = 0.3348, CI, interpretation |
 
 ---
 

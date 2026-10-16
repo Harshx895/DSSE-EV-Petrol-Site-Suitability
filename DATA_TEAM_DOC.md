@@ -4,7 +4,7 @@
 **Project:** EDI-5 — Dynamic Site Suitability Engine (DSSE)  
 **Your Role:** Data Collection, Cleaning, Feature Engineering, Spatial Indexing  
 **Scripts You Own:** 01, 02, 03, 04  
-**Output You Produced:** 741 stations | 17,412 POIs | 13 KDTree layers | 16 spatial features
+**Output You Produced:** 832 stations | 17,412 POIs | 13 KDTree layers | 16 spatial features
 
 ---
 
@@ -44,7 +44,7 @@ The project needs two types of data:
 
 - 363 petrol/fuel stations in Pune (from Google Places)
 - 13 confirmed commercial EV chargers (from OpenChargeMap)
-- 378 EV candidates (rated EV locations)
+- 469 EV candidates (rated EV locations)
 
 These are the "answers" the ML model learns from. Think of it like a student studying past exam questions.
 
@@ -106,7 +106,7 @@ def search_nearby(lat, lon, radius=4000, place_type="gas_station"):
 ## 4. Data Source 2 — OpenChargeMap (EV Chargers)
 
 ### What We Got
-- **378 EV candidate locations** in Pune (all rated locations)
+- **469 EV candidate locations** in Pune (all rated locations)
 - **13 confirmed commercial EV chargers** (our positive training set)
 - For each: name, latitude, longitude, charger type (AC/DC), operator, power output (kW)
 
@@ -148,7 +148,7 @@ We also scraped EV network portals for additional Pune chargers:
 - Tata Power EV portal
 - Magenta ChargeGrid
 
-These added to the 378 candidate pool but few were confirmed commercial-grade.
+These added to the 469 total EV (328 commercial, 141 candidate) pool but few were confirmed commercial-grade.
 
 ---
 
@@ -341,7 +341,7 @@ For every point (station or heatmap hexagon), we extract 16 features. Here is ea
 ## 9. KDTree — The Spatial Index
 
 ### The Problem Without KDTree
-Without spatial indexing, to find "all cafes within 300m of this point," you'd compare the point against every one of 1,247 cafe coordinates. For 896 hexagons × 16 features × 741 stations = millions of comparisons. Too slow.
+Without spatial indexing, to find "all cafes within 300m of this point," you'd compare the point against every one of 1,247 cafe coordinates. For 896 hexagons × 16 features × 832 stations = millions of comparisons. Too slow.
 
 ### What a KDTree Is
 

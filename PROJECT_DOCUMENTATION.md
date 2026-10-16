@@ -294,7 +294,7 @@ SFDS = Sum of |weight_EV(feature) - weight_petrol(feature)| x 0.5
 ### 8.3 Our Result
 
 ```
-SFDS = 0.4069
+SFDS = 0.3348
 95% Confidence Interval: [0.3480 – 0.6453]
 Interpretation: PARTIAL DECOUPLING
 ```
@@ -420,7 +420,7 @@ scripts/05_train_and_evaluate.py
     PU classifiers (petrol + EV)
     Conformal regressors (MAPIE)
     SHAP importances
-    SFDS computation → 0.4069
+    SFDS computation → 0.3348
 
 scripts/06_cache_heatmap.py
     Score 896 H3 hexagons → heatmap_pune.geojson
@@ -478,9 +478,9 @@ Predictor.score(lat, lon)  →  result in < 1 second
     data/
         raw/pune/                    # Downloaded raw CSVs
         processed/pune/
-            stations_master.csv      # 741 stations with all features
+            stations_master.csv      # 832 stations with all features
             poi_layers.parquet       # 17,412 OSM POI rows
-            sfds_results_pune.json   # SFDS = 0.4069
+            sfds_results_pune.json   # SFDS = 0.3348
             heatmaps/
                 heatmap_pune.geojson # 896 hex scores (438 KB)
                 heatmap_pune_meta.json
@@ -668,8 +668,8 @@ Models are trained on Pune data. Applying to another city requires re-running th
 ## 16. What Is Remaining — Roadmap
 
 ### MVP Complete
-- Phase 1: Data collection and ingestion (741 stations, 13 KDTree layers)
-- Phase 2: Model training (PU classifiers, SFDS = 0.4069, Spatial Block CV)
+- Phase 1: Data collection and ingestion (832 stations, 13 KDTree layers)
+- Phase 2: Model training (PU classifiers, SFDS = 0.3348, Spatial Block CV)
 - Phase 3: Heatmap (896 hexagons, H3 Res-8, GeoJSON 438KB)
 - Terminal demo tool (07_demo.py) with Google Maps URL support
 - Browser heatmap (08_visualize_heatmap.py) with ESRI tiles
