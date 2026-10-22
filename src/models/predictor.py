@@ -64,8 +64,8 @@ class Predictor:
         """
         Full scoring response for one location.
 
-        Composite = 0.4 * PU_viability + 0.6 * ACTI_throughput (validated:
-        known EV stations score 63-93, petrol 54-80 with this weighting).
+        Composite = 0.85 * PU_viability + 0.15 * ACTI_throughput
+        (Regressor R² < 0, so PU classifier dominates the composite.)
 
         Returns dict with keys: features, petrol, ev, quadrant, shap, warnings.
         """
@@ -103,10 +103,10 @@ class Predictor:
         else:
             te, te_lo, te_hi = 0.5, 0.3, 0.7
 
-        # 40% viability (PU-calibrated) + 60% throughput (ACTI regressor)
-        # Validated: known EV stations score 63-93, petrol stations 54-80
-        cp = score_to_100(0.4 * vp + 0.6 * tp)
-        ce = score_to_100(0.4 * ve + 0.6 * te)
+        # 85% viability (PU-calibrated) + 15% throughput (ACTI regressor)
+        # Regressor R² < 0 on both models, so PU now dominates the composite.
+        cp = score_to_100(0.85 * vp + 0.15 * tp)
+        ce = score_to_100(0.85 * ve + 0.15 * te)
 
         # ── SHAP local explanation ────────────────────────────────────────────
         shap_petrol = self._shap_values(self.pu_petrol, X, "petrol")

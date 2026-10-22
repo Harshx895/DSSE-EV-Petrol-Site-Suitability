@@ -3,18 +3,24 @@ src/models/recommender.py
 ---------------------------
 Four-quadrant decision logic (per CONTEXT §6).
 
-Final Score = 0.4 × Viability_PU + 0.6 × Throughput_Regression
+Final Score = 0.85 × Viability_PU + 0.15 × Throughput_Regression
+
+(Changed from 0.4/0.6: regressor R² < 0 on both models, so old 60% weight
+was actively degrading composite scores. PU classifier now dominates.)
 
 Quadrant thresholds (both normalized 0-100):
-  BEST_PETROL  : petrol ≥ 60 AND ev < 60
-  BEST_EV      : ev ≥ 60 AND petrol < 60
-  BOTH_VIABLE  : petrol ≥ 60 AND ev ≥ 60  → recommend EV (future-proofing)
-  POOR_BOTH    : petrol < 60 AND ev < 60
+  BEST_PETROL  : petrol ≥ 45 AND ev < 45
+  BEST_EV      : ev ≥ 45 AND petrol < 45
+  BOTH_VIABLE  : petrol ≥ 45 AND ev ≥ 45  → recommend EV (future-proofing)
+  POOR_BOTH    : petrol < 45 AND ev < 45
+
+  Threshold recalibrated 60→45 to match 0.85×PU + 0.15×Reg formula.
+  Old threshold was set for 0.6×Reg which inflated scores via ACTI sigmoid.
 """
 
 from __future__ import annotations
 
-THRESHOLD = 60.0
+THRESHOLD = 45.0
 
 
 def score_to_100(raw: float) -> float:

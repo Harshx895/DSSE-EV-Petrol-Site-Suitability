@@ -96,11 +96,11 @@ def plot_sfds_comparison(result: dict, city: str, out_dir: Path) -> Path:
 
     # Short display names
     labels = [
-        "Primary Hwy Dist", "Secondary Rd Dist", "Cafes 300m",
-        "Restaurants 300m", "Retail 500m", "Supermarket 500m",
+        "Primary Hwy Dist", "Secondary Rd Dist", "Cafes 500m",
+        "Restaurants 500m", "Retail 500m", "Supermarket 500m",
         "Offices 500m", "Bus Stops 500m", "Metro Dist",
         "Residential 500m", "Power Grid Dist", "Competitor Petrol 1km",
-        "Competitor EV 1km", "Dwell Index", "Transit Access", "Parking 300m"
+        "Competitor EV 1km", "Parking 500m"
     ]
 
     y_pos = np.arange(len(labels))
