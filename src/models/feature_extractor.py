@@ -80,7 +80,7 @@ def _nearest_dist_m(tree, point: np.ndarray, lat: float) -> float:
 
 class FeatureExtractor:
     """
-    Loads KDTrees and station data once, then extracts 16 features
+    Loads KDTrees and station data once, then extracts 14 features
     for arbitrary (lat, lon) points in O(log n) time.
     """
 
@@ -116,7 +116,7 @@ class FeatureExtractor:
         self.city = city
 
     def extract(self, lat: float, lon: float) -> dict[str, float]:
-        """Return dict of 16 raw (un-normalized) feature values."""
+        """Return dict of 14 raw (un-normalized) feature values."""
         pt  = np.array([lat, lon])
         lat = lat
 
@@ -174,7 +174,7 @@ class FeatureExtractor:
     def extract_batch(self, coords: np.ndarray) -> np.ndarray:
         """
         Extract features for N points. coords shape: (N, 2) [lat, lon].
-        Returns (N, 16) array in FEATURE_NAMES order.
+        Returns (N, 14) array in FEATURE_NAMES order.
         """
         rows = [list(self.extract(lat, lon).values())
                 for lat, lon in coords]
